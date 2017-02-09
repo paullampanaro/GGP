@@ -31,8 +31,8 @@ Game::Game(HINSTANCE hInstance)
 
 	// initialize game entities
 	gameEntities.push_back(GameEntity(mesh));
-	gameEntities.push_back(GameEntity(mesh));
-	gameEntities.push_back(GameEntity(mesh));
+	// gameEntities.push_back(GameEntity(mesh));
+	// gameEntities.push_back(GameEntity(mesh));
 
 #if defined(DEBUG) || defined(_DEBUG)
 	// Do we want a console window?  Probably only in debug mode
@@ -181,8 +181,6 @@ void Game::CreateBasicGeometry()
 	//    in the correct order and each one will be used exactly once
 	// - But just to see how it's done...
 	int indices[] = { 0, 1, 2 };
-	int indices2[] = { 0, 1, 2 };
-	int indices3[] = { 0, 1, 2 };
 
 	// create the meshes
 	mesh = new Mesh(vertices, 3, indices, 3, device);
@@ -216,15 +214,33 @@ void Game::Update(float deltaTime, float totalTime)
 	if (GetAsyncKeyState(VK_ESCAPE))
 		Quit();
 
-	// update each game entity's position 
-	// XMVECTOR vecPos = XMLoadFloat3(&gameEntities[0].getPosition());
-	XMMATRIX worldMat = XMLoadFloat4x4(&gameEntities[0].getWorldMatrix());
-	XMMATRIX translation = XMMatrixTranslation(0.001, 0, 0);
-	
-	worldMat = XMMatrixMultiply(worldMat, translation);
-	XMFLOAT4X4 yeahDig;
-	XMStoreFloat4x4(&yeahDig, worldMat);
-	gameEntities[0].setWorldMatrix(yeahDig);
+	// load the transformation vectors into DirectX Vectors 
+	XMFLOAT3 tempPosition = gameEntities[0].getPosition();
+	XMFLOAT3 tempRotation = gameEntities[0].getRotation();
+	XMFLOAT3 tempScale = gameEntities[0].getScale();
+	XMFLOAT4X4 tempWorldMatrix;
+
+	XMVECTOR v_position = XMLoadFloat3(&tempPosition);
+	XMVECTOR v_rotation = XMLoadFloat3(&tempRotation);
+	XMVECTOR v_scale = XMLoadFloat3(&tempScale);
+
+	// do work
+	XMVECTOR move = XMLoadFloat3(&XMFLOAT3(0.1f * deltaTime, 0.0f, 0.0f));
+	v_position = v_position + move;
+
+	// make the matrix
+	XMMATRIX m_worldMatrix = XMMatrixScalingFromVector(v_scale) * XMMatrixRotationRollPitchYawFromVector(v_rotation) * XMMatrixTranslationFromVector(v_position);
+
+	// store all values back into class
+	XMStoreFloat3(&tempPosition, v_position);
+	XMStoreFloat3(&tempRotation, v_rotation);
+	XMStoreFloat3(&tempScale, v_scale);
+	XMStoreFloat4x4(&tempWorldMatrix, m_worldMatrix);
+
+	gameEntities[0].setPosition(tempPosition);
+	gameEntities[0].setRotation(tempRotation);
+	gameEntities[0].setScale(tempScale);
+	gameEntities[0].setWorldMatrix(tempWorldMatrix);
 }
 
 // --------------------------------------------------------
