@@ -225,8 +225,8 @@ void Game::Update(float deltaTime, float totalTime)
 	XMVECTOR v_scale = XMLoadFloat3(&tempScale);
 
 	// do work
-	XMVECTOR move = XMLoadFloat3(&XMFLOAT3(0.1f * deltaTime, 0.0f, 0.0f));
-	v_position = v_position + move;
+	// XMVECTOR move = XMLoadFloat3(&XMFLOAT3(0.1f * deltaTime, 0.0f, 0.0f));
+	// v_position = v_position + move;
 
 	// make the matrix
 	XMMATRIX m_worldMatrix = XMMatrixScalingFromVector(v_scale) * XMMatrixRotationRollPitchYawFromVector(v_rotation) * XMMatrixTranslationFromVector(v_position);
