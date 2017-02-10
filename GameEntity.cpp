@@ -8,7 +8,7 @@ GameEntity::GameEntity(Mesh * a_mesh)
 	XMStoreFloat4x4(&worldMatrix, XMMatrixIdentity());
 	position = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	scale = XMFLOAT3(0.5f, 0.5f, 0.5f);
 }
 
 // destructor, currently not very useful

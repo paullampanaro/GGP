@@ -31,8 +31,8 @@ Game::Game(HINSTANCE hInstance)
 
 	// initialize game entities
 	gameEntities.push_back(GameEntity(mesh));
-	// gameEntities.push_back(GameEntity(mesh));
-	// gameEntities.push_back(GameEntity(mesh));
+	gameEntities.push_back(GameEntity(mesh));
+	gameEntities.push_back(GameEntity(mesh));
 
 #if defined(DEBUG) || defined(_DEBUG)
 	// Do we want a console window?  Probably only in debug mode
@@ -214,33 +214,52 @@ void Game::Update(float deltaTime, float totalTime)
 	if (GetAsyncKeyState(VK_ESCAPE))
 		Quit();
 
-	// load the transformation vectors into DirectX Vectors 
-	XMFLOAT3 tempPosition = gameEntities[0].getPosition();
-	XMFLOAT3 tempRotation = gameEntities[0].getRotation();
-	XMFLOAT3 tempScale = gameEntities[0].getScale();
-	XMFLOAT4X4 tempWorldMatrix;
+	for (int i = 0; i < gameEntities.size(); i++)
+	{
+		// load the transformation vectors into DirectX Vectors 
+		XMFLOAT3 tempPosition = gameEntities[i].getPosition();
+		XMFLOAT3 tempRotation = gameEntities[i].getRotation();
+		XMFLOAT3 tempScale = gameEntities[i].getScale();
+		XMFLOAT4X4 tempWorldMatrix;
 
-	XMVECTOR v_position = XMLoadFloat3(&tempPosition);
-	XMVECTOR v_rotation = XMLoadFloat3(&tempRotation);
-	XMVECTOR v_scale = XMLoadFloat3(&tempScale);
+		XMVECTOR v_position = XMLoadFloat3(&tempPosition);
+		XMVECTOR v_rotation = XMLoadFloat3(&tempRotation);
+		XMVECTOR v_scale = XMLoadFloat3(&tempScale);
 
-	// do work
-	// XMVECTOR move = XMLoadFloat3(&XMFLOAT3(0.1f * deltaTime, 0.0f, 0.0f));
-	// v_position = v_position + move;
+		// DO WORK HERE
+		// note to Chris - sorry these are mad simple, will try to use more complicated movement in the future
+		if (i == 0)
+		{
+			XMVECTOR move = XMLoadFloat3(&XMFLOAT3(1.0f * deltaTime, 0.0f, 0.0f));
+			v_position = v_position + move;
+		}
 
-	// make the matrix
-	XMMATRIX m_worldMatrix = XMMatrixScalingFromVector(v_scale) * XMMatrixRotationRollPitchYawFromVector(v_rotation) * XMMatrixTranslationFromVector(v_position);
+		if (i == 1)
+		{
+			XMVECTOR move = XMLoadFloat3(&XMFLOAT3(0.0f, 0.0f, 1.0f * deltaTime));
+			v_rotation = v_rotation + move;
+		}
 
-	// store all values back into class
-	XMStoreFloat3(&tempPosition, v_position);
-	XMStoreFloat3(&tempRotation, v_rotation);
-	XMStoreFloat3(&tempScale, v_scale);
-	XMStoreFloat4x4(&tempWorldMatrix, m_worldMatrix);
+		if (i == 2)
+		{
+			float scale = tempScale.x + deltaTime;
+			v_scale = XMLoadFloat3(&XMFLOAT3(scale, scale, scale));
+		}
 
-	gameEntities[0].setPosition(tempPosition);
-	gameEntities[0].setRotation(tempRotation);
-	gameEntities[0].setScale(tempScale);
-	gameEntities[0].setWorldMatrix(tempWorldMatrix);
+		// make the matrix
+		XMMATRIX m_worldMatrix = XMMatrixScalingFromVector(v_scale) * XMMatrixRotationRollPitchYawFromVector(v_rotation) * XMMatrixTranslationFromVector(v_position);
+
+		// store all values back into class
+		XMStoreFloat3(&tempPosition, v_position);
+		XMStoreFloat3(&tempRotation, v_rotation);
+		XMStoreFloat3(&tempScale, v_scale);
+		XMStoreFloat4x4(&tempWorldMatrix, XMMatrixTranspose(m_worldMatrix));
+
+		gameEntities[i].setPosition(tempPosition);
+		gameEntities[i].setRotation(tempRotation);
+		gameEntities[i].setScale(tempScale);
+		gameEntities[i].setWorldMatrix(tempWorldMatrix);
+	}
 }
 
 // --------------------------------------------------------
@@ -277,18 +296,14 @@ void Game::Draw(float deltaTime, float totalTime)
 		// the next draw call, you need to actually send it to the GPU
 		//  - If you skip this, the "SetMatrix" calls above won't make it to the GPU!
 		vertexShader->CopyAllBufferData();
-	}
 
-	// Set the vertex and pixel shaders to use for the next Draw() command
-	//  - These don't technically need to be set every frame...YET
-	//  - Once you start applying different shaders to different objects,
-	//    you'll need to swap the current shaders before each draw
-	vertexShader->SetShader();
-	pixelShader->SetShader();
+		// Set the vertex and pixel shaders to use for the next Draw() command
+		//  - These don't technically need to be set every frame...YET
+		//  - Once you start applying different shaders to different objects,
+		//    you'll need to swap the current shaders before each draw
+		vertexShader->SetShader();
+		pixelShader->SetShader();
 
-	// loop through game entities and draw each one
-	for (int i = 0; i < gameEntities.size(); i++)
-	{
 		// Set buffers in the input assembler
 		//  - Do this ONCE PER OBJECT you're drawing, since each object might
 		//    have different geometry.
@@ -311,7 +326,6 @@ void Game::Draw(float deltaTime, float totalTime)
 			0,     // Offset to the first index we want to use
 			0);    // Offset to add to each index when looking up vertices
 	}
-
 
 	// Present the back buffer to the user
 	//  - Puts the final frame we're drawing into the window so the user can see it
