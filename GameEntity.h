@@ -1,19 +1,17 @@
 #pragma once
 
 #include "Mesh.h"
-using namespace DirectX;
-
 
 class GameEntity 
 {
 private:
 	// world matrix
-	XMFLOAT4X4 worldMatrix;
+	DirectX::XMFLOAT4X4 worldMatrix;
 
 	// transformations
-	XMFLOAT3 position;
-	XMFLOAT3 rotation;
-	XMFLOAT3 scale;
+	DirectX::XMFLOAT3 position;
+	DirectX::XMFLOAT3 rotation;
+	DirectX::XMFLOAT3 scale;
 
 	// pointer to mesh object
 	Mesh* mesh;
@@ -24,14 +22,14 @@ public:
 	~GameEntity();
 
 	// get methods
-	XMFLOAT4X4 getWorldMatrix();
-	XMFLOAT3 getPosition();
-	XMFLOAT3 getRotation();
-	XMFLOAT3 getScale();
+	DirectX::XMFLOAT4X4 getWorldMatrix();
+	DirectX::XMFLOAT3 getPosition();
+	DirectX::XMFLOAT3 getRotation();
+	DirectX::XMFLOAT3 getScale();
 
 	// set methods
-	void setWorldMatrix(XMFLOAT4X4 a_matrix);
-	void setPosition(XMFLOAT3 a_vector);
-	void setRotation(XMFLOAT3 a_vector);
-	void setScale(XMFLOAT3 a_vector);
+	void setWorldMatrix(DirectX::XMFLOAT4X4 a_matrix);
+	void setPosition(DirectX::XMFLOAT3 a_vector);
+	void setRotation(DirectX::XMFLOAT3 a_vector);
+	void setScale(DirectX::XMFLOAT3 a_vector);
 };

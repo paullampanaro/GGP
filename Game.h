@@ -1,9 +1,10 @@
 #pragma once
 
-#include "GameEntity.h"
 #include "DXCore.h"
 #include "SimpleShader.h"
 #include <DirectXMath.h>
+#include "GameEntity.h"
+#include "Camera.h"
 
 class Game 
 	: public DXCore
@@ -54,5 +55,8 @@ private:
 
 	// vector of GameEntity objects
 	std::vector<GameEntity> gameEntities;
+
+	// the camera
+	Camera* camera;
 };
 

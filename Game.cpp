@@ -1,5 +1,4 @@
 #include "Game.h"
-#include "Vertex.h"
 
 // For the DirectX Math library
 using namespace DirectX;
@@ -34,6 +33,9 @@ Game::Game(HINSTANCE hInstance)
 	gameEntities.push_back(GameEntity(mesh));
 	gameEntities.push_back(GameEntity(mesh));
 
+	// initialize camera
+	camera = new Camera();
+
 #if defined(DEBUG) || defined(_DEBUG)
 	// Do we want a console window?  Probably only in debug mode
 	CreateConsoleWindow(500, 120, 32, 120);
@@ -60,6 +62,9 @@ Game::~Game()
 
 	// delete mesh pointers
 	delete mesh;
+
+	// delete camera
+	delete camera;
 }
 
 // --------------------------------------------------------
@@ -213,7 +218,10 @@ void Game::Update(float deltaTime, float totalTime)
 	// Quit if the escape key is pressed
 	if (GetAsyncKeyState(VK_ESCAPE))
 		Quit();
+	
+	// update camera - trying to use camera here cause "ambiguous errors"
 
+	// update game entity position
 	for (int i = 0; i < gameEntities.size(); i++)
 	{
 		// load the transformation vectors into DirectX Vectors 
@@ -227,7 +235,6 @@ void Game::Update(float deltaTime, float totalTime)
 		XMVECTOR v_scale = XMLoadFloat3(&tempScale);
 
 		// DO WORK HERE
-		// note to Chris - sorry these are mad simple, will try to use more complicated movement in the future
 		if (i == 0)
 		{
 			XMVECTOR move = XMLoadFloat3(&XMFLOAT3(1.0f * deltaTime, 0.0f, 0.0f));
