@@ -5,6 +5,7 @@
 #include <DirectXMath.h>
 #include "GameEntity.h"
 #include "Camera.h"
+#include "Material.h"
 
 class Game 
 	: public DXCore
@@ -58,5 +59,8 @@ private:
 
 	// the camera
 	Camera* camera;
+
+	// material class
+	Material* mat1;
 };
 

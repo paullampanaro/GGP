@@ -1,8 +1,9 @@
 #include "GameEntity.h"
 
-GameEntity::GameEntity(Mesh * a_mesh)
+GameEntity::GameEntity(Mesh * a_mesh, Material* a_mat)
 {
 	mesh = a_mesh;
+	mat = a_mat;
 
 	// default values
 	XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixIdentity());
@@ -17,45 +18,72 @@ GameEntity::~GameEntity()
 }
 
 // get methods
-DirectX::XMFLOAT4X4 GameEntity::getWorldMatrix()
+DirectX::XMFLOAT4X4 GameEntity::GetWorldMatrix()
 {
 	return worldMatrix;
 }
 
-DirectX::XMFLOAT3 GameEntity::getPosition()
+DirectX::XMFLOAT3 GameEntity::GetPosition()
 {
 	return position;
 }
 
-DirectX::XMFLOAT3 GameEntity::getRotation()
+DirectX::XMFLOAT3 GameEntity::GetRotation()
 {
 	return rotation;
 }
 
-DirectX::XMFLOAT3 GameEntity::getScale()
+DirectX::XMFLOAT3 GameEntity::GetScale()
 {
 	return scale;
 }
 
 // set methods
-void GameEntity::setWorldMatrix(DirectX::XMFLOAT4X4 a_matrix)
+void GameEntity::SetWorldMatrix(DirectX::XMFLOAT4X4 a_matrix)
 {
 	worldMatrix = a_matrix;
 }
 
-void GameEntity::setPosition(DirectX::XMFLOAT3 a_vector)
+void GameEntity::SetPosition(DirectX::XMFLOAT3 a_vector)
 {
 	position = a_vector;
 }
 
-void GameEntity::setRotation(DirectX::XMFLOAT3 a_vector)
+void GameEntity::SetRotation(DirectX::XMFLOAT3 a_vector)
 {
 	rotation = a_vector;
 }
 
-void GameEntity::setScale(DirectX::XMFLOAT3 a_vector)
+void GameEntity::SetScale(DirectX::XMFLOAT3 a_vector)
 {
 	scale = a_vector;
+}
+
+// manage material class
+void GameEntity::PrepareMaterials(DirectX::XMFLOAT4X4 viewMatrix, DirectX::XMFLOAT4X4 projMatrix)
+{
+	/* Ask Chris about this, I'm so bad at C++ lol
+	SimpleVertexShader* temp = mat->GetVertexShader();
+	temp->SetMatrix4x4("world", worldMatrix);
+	temp->SetMatrix4x4("view", viewMatrix);
+	temp->SetMatrix4x4("projection", projMatrix);
+
+	temp->CopyAllBufferData();
+	
+	temp->SetShader();
+	mat->GetPixelShader()->SetShader();
+
+	delete temp;
+	*/
+
+	mat->GetVertexShader()->SetMatrix4x4("world", worldMatrix);
+	mat->GetVertexShader()->SetMatrix4x4("view", viewMatrix);
+	mat->GetVertexShader()->SetMatrix4x4("projection", projMatrix);
+
+	mat->GetVertexShader()->CopyAllBufferData();
+
+	mat->GetVertexShader()->SetShader();
+	mat->GetPixelShader()->SetShader();
 }
 
 

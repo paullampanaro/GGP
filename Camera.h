@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Vertex.h"
+#include "Windows.h"
 
 class Camera 
 {
@@ -21,7 +22,14 @@ public:
 
 	// update
 	void Update(float deltaTime);
-	DirectX::XMFLOAT4X4 getViewMatrix();
-	DirectX::XMFLOAT4X4 getProjMatrix();
 
+	// get methods
+	DirectX::XMFLOAT4X4 GetViewMatrix();
+	DirectX::XMFLOAT4X4 GetProjMatrix();
+
+	// mouse method
+	void MouseUpdate(int mouseX, int mouseY);
+
+	// projection matrix method
+	void ManageProjMatrix(int a_width, int a_height);
 };

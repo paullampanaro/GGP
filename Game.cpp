@@ -26,12 +26,12 @@ Game::Game(HINSTANCE hInstance)
 	pixelShader = 0;
 
 	// initialize mesh
-	mesh = nullptr;
+	mesh = 0;
 
-	// initialize game entities
-	gameEntities.push_back(GameEntity(mesh));
-	gameEntities.push_back(GameEntity(mesh));
-	gameEntities.push_back(GameEntity(mesh));
+	// initialize material
+	mat1 = 0;
+
+	
 
 	// initialize camera
 	camera = new Camera();
@@ -80,6 +80,11 @@ void Game::Init()
 	CreateMatrices();
 	CreateBasicGeometry();
 
+	// initialize game entities
+	gameEntities.push_back(GameEntity(mesh, mat1));
+	gameEntities.push_back(GameEntity(mesh, mat1));
+	gameEntities.push_back(GameEntity(mesh, mat1));
+
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
 	// Essentially: "What kind of shape should the GPU draw with our data?"
@@ -101,6 +106,9 @@ void Game::LoadShaders()
 	pixelShader = new SimplePixelShader(device, context);
 	if(!pixelShader->LoadShaderFile(L"Debug/PixelShader.cso"))	
 		pixelShader->LoadShaderFile(L"PixelShader.cso");
+
+	// load shaders into material
+	mat1 = new Material(vertexShader, pixelShader);
 
 	// You'll notice that the code above attempts to load each
 	// compiled shader file (.cso) from two different relative paths.
@@ -156,6 +164,9 @@ void Game::CreateMatrices()
 		0.1f,						// Near clip plane distance
 		100.0f);					// Far clip plane distance
 	XMStoreFloat4x4(&projectionMatrix, XMMatrixTranspose(P)); // Transpose for HLSL!
+
+	// create projection matrix of camera class
+	camera->ManageProjMatrix(width, height);
 }
 
 
@@ -208,6 +219,9 @@ void Game::OnResize()
 		0.1f,				  	// Near clip plane distance
 		100.0f);			  	// Far clip plane distance
 	XMStoreFloat4x4(&projectionMatrix, XMMatrixTranspose(P)); // Transpose for HLSL!
+
+	// update projection matrix of camera on resize
+	camera->ManageProjMatrix(width, height);
 }
 
 // --------------------------------------------------------
@@ -220,14 +234,15 @@ void Game::Update(float deltaTime, float totalTime)
 		Quit();
 	
 	// update camera - trying to use camera here cause "ambiguous errors"
+	camera->Update(deltaTime);
 
 	// update game entity position
 	for (int i = 0; i < gameEntities.size(); i++)
 	{
 		// load the transformation vectors into DirectX Vectors 
-		XMFLOAT3 tempPosition = gameEntities[i].getPosition();
-		XMFLOAT3 tempRotation = gameEntities[i].getRotation();
-		XMFLOAT3 tempScale = gameEntities[i].getScale();
+		XMFLOAT3 tempPosition = gameEntities[i].GetPosition();
+		XMFLOAT3 tempRotation = gameEntities[i].GetRotation();
+		XMFLOAT3 tempScale = gameEntities[i].GetScale();
 		XMFLOAT4X4 tempWorldMatrix;
 
 		XMVECTOR v_position = XMLoadFloat3(&tempPosition);
@@ -247,11 +262,13 @@ void Game::Update(float deltaTime, float totalTime)
 			v_rotation = v_rotation + move;
 		}
 
+		/*
 		if (i == 2)
 		{
 			float scale = tempScale.x + deltaTime;
 			v_scale = XMLoadFloat3(&XMFLOAT3(scale, scale, scale));
 		}
+		*/
 
 		// make the matrix
 		XMMATRIX m_worldMatrix = XMMatrixScalingFromVector(v_scale) * XMMatrixRotationRollPitchYawFromVector(v_rotation) * XMMatrixTranslationFromVector(v_position);
@@ -262,10 +279,10 @@ void Game::Update(float deltaTime, float totalTime)
 		XMStoreFloat3(&tempScale, v_scale);
 		XMStoreFloat4x4(&tempWorldMatrix, XMMatrixTranspose(m_worldMatrix));
 
-		gameEntities[i].setPosition(tempPosition);
-		gameEntities[i].setRotation(tempRotation);
-		gameEntities[i].setScale(tempScale);
-		gameEntities[i].setWorldMatrix(tempWorldMatrix);
+		gameEntities[i].SetPosition(tempPosition);
+		gameEntities[i].SetRotation(tempRotation);
+		gameEntities[i].SetScale(tempScale);
+		gameEntities[i].SetWorldMatrix(tempWorldMatrix);
 	}
 }
 
@@ -290,14 +307,15 @@ void Game::Draw(float deltaTime, float totalTime)
 	// pass each entity's world matrix to the shader before drawing
 	for (int i = 0; i < gameEntities.size(); i++)
 	{
+		/*
 		// Send data to shader variables
 		//  - Do this ONCE PER OBJECT you're drawing
 		//  - This is actually a complex process of copying data to a local buffer
 		//    and then copying that entire buffer to the GPU.  
 		//  - The "SimpleShader" class handles all of that for you.
-		vertexShader->SetMatrix4x4("world", gameEntities[i].getWorldMatrix());
-		vertexShader->SetMatrix4x4("view", viewMatrix);
-		vertexShader->SetMatrix4x4("projection", projectionMatrix);
+		vertexShader->SetMatrix4x4("world", gameEntities[i].GetWorldMatrix());
+		vertexShader->SetMatrix4x4("view", camera->GetViewMatrix());
+		vertexShader->SetMatrix4x4("projection", camera->GetProjMatrix());
 
 		// Once you've set all of the data you care to change for
 		// the next draw call, you need to actually send it to the GPU
@@ -310,6 +328,10 @@ void Game::Draw(float deltaTime, float totalTime)
 		//    you'll need to swap the current shaders before each draw
 		vertexShader->SetShader();
 		pixelShader->SetShader();
+		*/
+
+		// do all that in here instead
+		gameEntities[i].PrepareMaterials(camera->GetViewMatrix(), camera->GetProjMatrix());
 
 		// Set buffers in the input assembler
 		//  - Do this ONCE PER OBJECT you're drawing, since each object might
@@ -382,6 +404,7 @@ void Game::OnMouseUp(WPARAM buttonState, int x, int y)
 void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 {
 	// Add any custom code here...
+	camera->MouseUpdate(x - prevMousePos.x, y - prevMousePos.y);
 
 	// Save the previous mouse position, so we have it for the future
 	prevMousePos.x = x;
