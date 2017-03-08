@@ -2,12 +2,16 @@
 
 #include <d3d11.h>
 #include "Vertex.h"
+#include <vector>
+#include <DirectXMath.h>
+#include <fstream>
 
 class Mesh
 {
 public:
 	// constructor
-	Mesh(Vertex* vertices, int numVertices, int* indices, int numIndices, ID3D11Device* device);
+	Mesh(Vertex* vertices, int numVertices, unsigned int * indices, int numIndices, ID3D11Device* device);
+	Mesh(const char * file, ID3D11Device * device);
 	~Mesh();
 
 	// returns pointer to vertex buffer object
@@ -26,4 +30,7 @@ private:
 
 	// number of indices in the mesh's index buffer
 	int numIndices;
+
+	// buffer creation helper code
+	void BuildBuffer(Vertex* vertices, int numVertices, unsigned int * indices, int numIndices, ID3D11Device* device);
 };

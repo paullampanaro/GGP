@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "WICTextureLoader.h"
 
 // For the DirectX Math library
 using namespace DirectX;
@@ -26,12 +27,12 @@ Game::Game(HINSTANCE hInstance)
 	pixelShader = 0;
 
 	// initialize mesh
-	mesh = 0;
+	mesh1 = 0;
+	mesh2 = 0;
+	mesh3 = 0;
 
 	// initialize material
 	mat1 = 0;
-
-	
 
 	// initialize camera
 	camera = new Camera();
@@ -61,10 +62,20 @@ Game::~Game()
 	delete pixelShader;
 
 	// delete mesh pointers
-	delete mesh;
+	delete mesh1;
+	delete mesh2;
+	delete mesh3;
 
 	// delete camera
 	delete camera;
+
+	// delete material
+	delete mat1;
+
+	// release textures
+	plasterSRV->Release();
+	rustpaintSRV->Release();
+	sampler->Release();
 }
 
 // --------------------------------------------------------
@@ -80,10 +91,43 @@ void Game::Init()
 	CreateMatrices();
 	CreateBasicGeometry();
 
+	// load textures
+	CreateWICTextureFromFile(device, context, L"Assets/Textures/plaster.jpg", 0, &plasterSRV);
+	CreateWICTextureFromFile(device, context, L"Assets/Textures/rustpaint.jpg", 0, &rustpaintSRV);
+
+	// create sampler
+	D3D11_SAMPLER_DESC samplerDesc = {};
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	samplerDesc.MaxAnisotropy = 16;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	device->CreateSamplerState(&samplerDesc, &sampler);
+
+	// load shaders into material
+	mat1 = new Material(vertexShader, pixelShader, plasterSRV, sampler);
+
 	// initialize game entities
-	gameEntities.push_back(GameEntity(mesh, mat1));
-	gameEntities.push_back(GameEntity(mesh, mat1));
-	gameEntities.push_back(GameEntity(mesh, mat1));
+	gameEntities.push_back(GameEntity(mesh1, mat1));
+	gameEntities.push_back(GameEntity(mesh2, mat1));
+	gameEntities.push_back(GameEntity(mesh3, mat1));
+
+	// initialize light struct
+	light = 
+	{
+		XMFLOAT4(0.1, 0.1, 0.1, 1.0), // ambient color
+		XMFLOAT4(0, 0, 1, 1), // diffuse color
+		XMFLOAT3(1, -1, 0) // direction
+	};
+
+	light2 =
+	{
+		XMFLOAT4(0.1, 0.1, 0.1, 1.0), // ambient color
+		XMFLOAT4(1, 0 , 0 ,1), // diffuse color
+		XMFLOAT3(1, 0 , -1) // direction
+	};
 
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
@@ -106,9 +150,6 @@ void Game::LoadShaders()
 	pixelShader = new SimplePixelShader(device, context);
 	if(!pixelShader->LoadShaderFile(L"Debug/PixelShader.cso"))	
 		pixelShader->LoadShaderFile(L"PixelShader.cso");
-
-	// load shaders into material
-	mat1 = new Material(vertexShader, pixelShader);
 
 	// You'll notice that the code above attempts to load each
 	// compiled shader file (.cso) from two different relative paths.
@@ -181,14 +222,20 @@ void Game::CreateBasicGeometry()
 	XMFLOAT4 green	= XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
 	XMFLOAT4 blue	= XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
 
+	// normals
+	XMFLOAT3 normal = XMFLOAT3(0, 0, -1);
+
+	// uv
+	XMFLOAT2 uv = XMFLOAT2(0, 0);
+
 	// Set up the vertices of the triangle we would like to draw
 	// - We're going to copy this array, exactly as it exists in memory
 	//    over to a DirectX-controlled data structure (the vertex buffer)
 	Vertex vertices[] = 
 	{
-		{ XMFLOAT3(+0.0f, +1.0f, +0.0f), red },
-		{ XMFLOAT3(+1.5f, -1.0f, +0.0f), blue },
-		{ XMFLOAT3(-1.5f, -1.0f, +0.0f), green },
+		{ XMFLOAT3(+0.0f, +1.0f, +0.0f), normal, uv },
+		{ XMFLOAT3(+1.5f, -1.0f, +0.0f), normal, uv },
+		{ XMFLOAT3(-1.5f, -1.0f, +0.0f), normal, uv },
 	};
 
 	// Set up the indices, which tell us which vertices to use and in which order
@@ -196,10 +243,13 @@ void Game::CreateBasicGeometry()
 	// - Indices are technically not required if the vertices are in the buffer 
 	//    in the correct order and each one will be used exactly once
 	// - But just to see how it's done...
-	int indices[] = { 0, 1, 2 };
+	UINT indices[] = { 0, 1, 2 };
 
 	// create the meshes
-	mesh = new Mesh(vertices, 3, indices, 3, device);
+	// mesh1 = new Mesh(vertices, 3, indices, 3, device);
+	mesh1 = new Mesh("Assets/Models/cylinder.obj", device);
+	mesh2 = new Mesh("Assets/Models/cone.obj", device);
+	mesh3 = new Mesh("Assets/Models/helix.obj", device);
 }
 
 
@@ -330,9 +380,6 @@ void Game::Draw(float deltaTime, float totalTime)
 		pixelShader->SetShader();
 		*/
 
-		// do all that in here instead
-		gameEntities[i].PrepareMaterials(camera->GetViewMatrix(), camera->GetProjMatrix());
-
 		// Set buffers in the input assembler
 		//  - Do this ONCE PER OBJECT you're drawing, since each object might
 		//    have different geometry.
@@ -340,10 +387,27 @@ void Game::Draw(float deltaTime, float totalTime)
 		UINT offset = 0;
 
 		// storing result in a variable
-		ID3D11Buffer* vBuffer = mesh->GetVertexBuffer();
+		ID3D11Buffer* vBuffer = gameEntities[i].GetMesh()->GetVertexBuffer();
+		ID3D11Buffer* iBuffer = gameEntities[i].GetMesh()->GetIndexBuffer();
 
 		context->IASetVertexBuffers(0, 1, &vBuffer, &stride, &offset);
-		context->IASetIndexBuffer(mesh->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+		context->IASetIndexBuffer(iBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+		pixelShader->SetData(
+			"light", // name of variable in shader
+			&light, // address of data to copy
+			sizeof(DirectionalLight) // size of data to copy
+		);
+
+		pixelShader->SetData(
+			"light2",
+			&light2,
+			sizeof(DirectionalLight)
+		);
+
+		// pixelShader
+		// do all that in here instead
+		gameEntities[i].PrepareMaterials(camera->GetViewMatrix(), camera->GetProjMatrix());
 
 		// Finally do the actual drawing
 		//  - Do this ONCE PER OBJECT you intend to draw
@@ -351,7 +415,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		//  - DrawIndexed() uses the currently set INDEX BUFFER to look up corresponding
 		//     vertices in the currently set VERTEX BUFFER
 		context->DrawIndexed(
-			3,     // The number of indices to use (we could draw a subset if we wanted)
+			gameEntities[i].GetMesh()->GetIndexCount(),     // The number of indices to use (we could draw a subset if we wanted)
 			0,     // Offset to the first index we want to use
 			0);    // Offset to add to each index when looking up vertices
 	}
@@ -404,7 +468,7 @@ void Game::OnMouseUp(WPARAM buttonState, int x, int y)
 void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 {
 	// Add any custom code here...
-	camera->MouseUpdate(x - prevMousePos.x, y - prevMousePos.y);
+	camera->MouseUpdate(prevMousePos.x - x, prevMousePos.y - y);
 
 	// Save the previous mouse position, so we have it for the future
 	prevMousePos.x = x;

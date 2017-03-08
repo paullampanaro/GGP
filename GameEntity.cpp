@@ -38,6 +38,11 @@ DirectX::XMFLOAT3 GameEntity::GetScale()
 	return scale;
 }
 
+Mesh * GameEntity::GetMesh()
+{
+	return mesh;
+}
+
 // set methods
 void GameEntity::SetWorldMatrix(DirectX::XMFLOAT4X4 a_matrix)
 {
@@ -62,27 +67,14 @@ void GameEntity::SetScale(DirectX::XMFLOAT3 a_vector)
 // manage material class
 void GameEntity::PrepareMaterials(DirectX::XMFLOAT4X4 viewMatrix, DirectX::XMFLOAT4X4 projMatrix)
 {
-	/* Ask Chris about this, I'm so bad at C++ lol
-	SimpleVertexShader* temp = mat->GetVertexShader();
-	temp->SetMatrix4x4("world", worldMatrix);
-	temp->SetMatrix4x4("view", viewMatrix);
-	temp->SetMatrix4x4("projection", projMatrix);
-
-	temp->CopyAllBufferData();
-	
-	temp->SetShader();
-	mat->GetPixelShader()->SetShader();
-
-	delete temp;
-	*/
-
 	mat->GetVertexShader()->SetMatrix4x4("world", worldMatrix);
 	mat->GetVertexShader()->SetMatrix4x4("view", viewMatrix);
 	mat->GetVertexShader()->SetMatrix4x4("projection", projMatrix);
 
 	mat->GetVertexShader()->CopyAllBufferData();
-
 	mat->GetVertexShader()->SetShader();
+
+	mat->GetPixelShader()->CopyAllBufferData();
 	mat->GetPixelShader()->SetShader();
 }
 

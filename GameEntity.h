@@ -30,6 +30,7 @@ public:
 	DirectX::XMFLOAT3 GetPosition();
 	DirectX::XMFLOAT3 GetRotation();
 	DirectX::XMFLOAT3 GetScale();
+	Mesh* GetMesh();
 
 	// set methods
 	void SetWorldMatrix(DirectX::XMFLOAT4X4 a_matrix);

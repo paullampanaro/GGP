@@ -6,6 +6,7 @@
 #include "GameEntity.h"
 #include "Camera.h"
 #include "Material.h"
+#include "Lights.h"
 
 class Game 
 	: public DXCore
@@ -52,7 +53,9 @@ private:
 	POINT prevMousePos;
 
 	// a single mesh object, shared by multiple game entities
-	Mesh* mesh;
+	Mesh* mesh1;
+	Mesh* mesh2;
+	Mesh* mesh3;
 
 	// vector of GameEntity objects
 	std::vector<GameEntity> gameEntities;
@@ -62,5 +65,14 @@ private:
 
 	// material class
 	Material* mat1;
+
+	// direction light struct
+	DirectionalLight light;
+	DirectionalLight light2;
+	
+	// textures
+	ID3D11ShaderResourceView* plasterSRV;
+	ID3D11ShaderResourceView* rustpaintSRV;
+	ID3D11SamplerState* sampler;
 };
 
